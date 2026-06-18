@@ -106,9 +106,11 @@ app.get("/reportes/consumos/exportar", async (req, res) => {
             FROM consumo_srvicio c
             INNER JOIN servicio s ON c.id_servicio = s.id_servicio
             INNER JOIN empleado e ON c.id_empleado = e.id_empleado
+            WHERE c.id_empleado = 2
             GROUP BY e.nombre, e.apellido, s.nombre_servicio
             HAVING SUM(c.sub_total) >= 20
             ORDER BY total_recaudado DESC;
+            
         `;
 
         const resultado = await pool.query(sql);
