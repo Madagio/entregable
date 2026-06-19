@@ -53,8 +53,8 @@ app.get("/probar-bd", async (req, res) => {
 
 /*
 CONSULTA 
-Reporte de consumos por empleado y servicio, mostrando cantidad de consumos, cantidad total y 
-total recaudado, solo si el total recaudado es mayor o igual a 20, ordenado de mayor a menor recaudación.
+Listar los servicios consumidos atendidos por el empleado 2, mostrando cuántos consumos hubo, la cantidad total 
+y el monto total recaudado por cada servicio, solo si el total recaudado es al menos 20
 */
 
 // REPORTE CON GROUP BY Y HAVING
@@ -71,6 +71,7 @@ app.get("/reportes/consumos", async (req, res) => {
             FROM consumo_srvicio c
             INNER JOIN servicio s ON c.id_servicio = s.id_servicio
             INNER JOIN empleado e ON c.id_empleado = e.id_empleado
+            WHERE c.id_empleado = 2
             GROUP BY e.nombre, e.apellido, s.nombre_servicio
             HAVING SUM(c.sub_total) >= 20
             ORDER BY total_recaudado DESC;
@@ -86,11 +87,7 @@ app.get("/reportes/consumos", async (req, res) => {
 });
 
 
-/*
-CONSULTA 
-Reporte de consumos por empleado y servicio, mostrando cantidad de consumos, cantidad total y 
-total recaudado, solo si el total recaudado es mayor o igual a 20, ordenado de mayor a menor recaudación.
-*/
+
 
 // EXPORTAR REPORTE A CSV
 app.get("/reportes/consumos/exportar", async (req, res) => {
@@ -106,11 +103,9 @@ app.get("/reportes/consumos/exportar", async (req, res) => {
             FROM consumo_srvicio c
             INNER JOIN servicio s ON c.id_servicio = s.id_servicio
             INNER JOIN empleado e ON c.id_empleado = e.id_empleado
-            WHERE c.id_empleado = 2
             GROUP BY e.nombre, e.apellido, s.nombre_servicio
             HAVING SUM(c.sub_total) >= 20
             ORDER BY total_recaudado DESC;
-            
         `;
 
         const resultado = await pool.query(sql);
@@ -131,13 +126,18 @@ app.get("/reportes/consumos/exportar", async (req, res) => {
     }
 });
 
-// CRUD COMPLEJO: INSERTAR RESERVA COMPLETA
+// TRANSACCION: INSERTAR RESERVA COMPLETA
 // Inserta en 4 tablas: reserva, estadia, pago y detalle_pago
 app.post("/reservas-completas", async (req, res) => {
+    const client = await pool.connect();
+
     try {
         const datos = req.body;
 
-        const reserva = await pool.query(`
+        // Inicia la transaccion
+        await client.query("BEGIN");
+
+        const reserva = await client.query(`
             INSERT INTO reserva
             (fch_reserva, estado_reserva, cantidad_personas, id_huesped, id_habitacion, id_empleado)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -153,7 +153,7 @@ app.post("/reservas-completas", async (req, res) => {
 
         const id_reserva_generado = reserva.rows[0].id_reserva;
 
-        const estadia = await pool.query(`
+        const estadia = await client.query(`
             INSERT INTO estadia
             (fch_ingreso, fch_salida, hr_ingreso, hr_salida, id_empleado, id_reserva)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -169,7 +169,7 @@ app.post("/reservas-completas", async (req, res) => {
 
         const id_estadia_generado = estadia.rows[0].id_estadia;
 
-        const pago = await pool.query(`
+        const pago = await client.query(`
             INSERT INTO pago
             (fch_pago, monto_total, estado_pago, id_reserva, id_metodo)
             VALUES ($1, $2, $3, $4, $5)
@@ -184,7 +184,7 @@ app.post("/reservas-completas", async (req, res) => {
 
         const id_pago_generado = pago.rows[0].id_pago;
 
-        const detalle = await pool.query(`
+        const detalle = await client.query(`
             INSERT INTO detalle_pago
             (monto_abonado, descripcion, id_pago, id_servicio)
             VALUES ($1, $2, $3, $4)
@@ -198,8 +198,11 @@ app.post("/reservas-completas", async (req, res) => {
 
         const id_detalle_generado = detalle.rows[0].id_detalle;
 
+        // Si todo salió bien, confirma los cambios
+        await client.query("COMMIT");
+
         res.json({
-            mensaje: "Reserva completa registrada correctamente",
+            mensaje: "Reserva completa registrada correctamente con COMMIT",
             id_reserva: id_reserva_generado,
             id_estadia: id_estadia_generado,
             id_pago: id_pago_generado,
@@ -207,11 +210,18 @@ app.post("/reservas-completas", async (req, res) => {
         });
 
     } catch (error) {
+        // Si algo falla, deshace todo
+        await client.query("ROLLBACK");
+
         console.log(error);
+
         res.status(500).json({
-            mensaje: "Error al registrar reserva completa",
+            mensaje: "Error en la transaccion. Se ejecuto ROLLBACK",
             error: error.message
         });
+
+    } finally {
+        client.release();
     }
 });
 
