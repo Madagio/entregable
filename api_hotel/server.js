@@ -103,6 +103,7 @@ app.get("/reportes/consumos/exportar", async (req, res) => {
             FROM consumo_srvicio c
             INNER JOIN servicio s ON c.id_servicio = s.id_servicio
             INNER JOIN empleado e ON c.id_empleado = e.id_empleado
+            WHERE c.id_empleado = 2
             GROUP BY e.nombre, e.apellido, s.nombre_servicio
             HAVING SUM(c.sub_total) >= 20
             ORDER BY total_recaudado DESC;
@@ -134,7 +135,7 @@ app.post("/reservas-completas", async (req, res) => {
     try {
         const datos = req.body;
 
-        // Inicia la transaccion
+
         await client.query("BEGIN");
 
         const reserva = await client.query(`
@@ -198,7 +199,6 @@ app.post("/reservas-completas", async (req, res) => {
 
         const id_detalle_generado = detalle.rows[0].id_detalle;
 
-        // Si todo salió bien, confirma los cambios
         await client.query("COMMIT");
 
         res.json({
@@ -210,7 +210,7 @@ app.post("/reservas-completas", async (req, res) => {
         });
 
     } catch (error) {
-        // Si algo falla, deshace todo
+
         await client.query("ROLLBACK");
 
         console.log(error);
