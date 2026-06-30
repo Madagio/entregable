@@ -675,13 +675,13 @@ VALUES
 (305, 'F001-000013', '2026-05-22', 'Factura por adelantos integrales de alojamiento', 105);
 
 INSERT INTO consumo_srvicio 
-(id_consumo_srvc, fch_consumo, cantidad, sub_total, descripcion, id_estadia, id_servicio, id_empleado)
+(id_consumo_srvc, fch_consumo, cantidad, descripcion, id_estadia, id_servicio, id_empleado)
 VALUES
-(1, '2026-05-10', 2, 30.00, 'Consumo de hospedaje simple', 1, 1, 1),
-(2, '2026-05-11', 1, 30.00, 'Consumo de hospedaje doble', 2, 2, 2),
-(3, '2026-05-12', 3, 24.00, 'Consumo de minibar', 3, 3, 1),
-(4, '2026-05-13', 1, 20.00, 'Acceso al spa', 4, 4, 3),
-(5, '2026-05-14', 2, 30.00, 'Almuerzo ejecutivo hotelero', 5, 5, 2);
+(1, '2026-05-10', 2, 'Consumo de hospedaje simple', 1, 1, 1),
+(2, '2026-05-11', 1, 'Consumo de hospedaje doble', 2, 2, 2),
+(3, '2026-05-12', 3, 'Consumo de minibar', 3, 3, 1),
+(4, '2026-05-13', 1, 'Acceso al spa', 4, 4, 3),
+(5, '2026-05-14', 2, 'Almuerzo ejecutivo hotelero', 5, 5, 2);
 
 
 SELECT setval('rol_empleado_id_rol_seq', (SELECT MAX(id_rol) FROM rol_empleado));
