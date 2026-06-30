@@ -64,7 +64,10 @@ VALUES (
 }');
 
 -- consultar propidad interna del json
-SELECT * WHERE datos->>'estado_reserva' = 'Confirmada'
+SELECT *
+FROM reserva_documental
+WHERE datos->>'estado_reserva' = 'Confirmada';
+
 
 
 
