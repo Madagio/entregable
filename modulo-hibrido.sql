@@ -65,6 +65,15 @@ VALUES (
 
 -- consultar propidad interna del json
 SELECT * WHERE datos->>'estado_reserva' = 'Confirmada'
+-- sacar datos internos del documento
+SELECT
+    datos->>'id_reserva' AS id_reserva,
+    datos->>'estado_reserva' AS estado,
+    datos->'huesped'->>'nombres' AS nombre_huesped,
+    datos->'huesped'->>'apellidos' AS apellido_huesped,
+    datos->'habitacion'->>'nro_habitacion' AS habitacion,
+    datos->'pago'->>'monto_total' AS monto_total
+FROM reserva_documental;
 
 
 
