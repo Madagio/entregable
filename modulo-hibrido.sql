@@ -62,7 +62,8 @@ VALUES (
     ]
   }
 }');
-
+SELECT *
+FROM reserva_documental;
 -- consultar propidad interna del json
 SELECT
     datos->>'id_reserva' AS id_reserva,
