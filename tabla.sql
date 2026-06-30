@@ -628,8 +628,8 @@ VALUES
 INSERT INTO pago (id_pago, fch_pago, monto_total, estado_pago, id_reserva, id_metodo)
 VALUES
 (101, '2026-05-15', 45.00, 'Pagado', 5001, 1),
-(102, '2026-05-16', 95.00, 'Pagado', 5002, 2),
-(103, '2026-05-18', 60.00, 'Pagado', 5003, 2),
+(102, '2026-05-16', 95.50, 'Pagado', 5002, 2),
+(103, '2026-05-18', 80.00, 'Pagado', 5003, 2),
 (104, '2026-05-20', 50.00, 'Pendiente', 5004, 3),
 (105, '2026-05-22', 125.00, 'Pagado', 5005, 4);
 
@@ -675,14 +675,18 @@ VALUES
 (305, 'F001-000013', '2026-05-22', 'Factura por adelantos integrales de alojamiento', 105);
 
 INSERT INTO consumo_srvicio 
-(id_consumo_srvc, fch_consumo, cantidad, descripcion, id_estadia, id_servicio, id_empleado)
+(id_consumo_srvc, fch_consumo, cantidad, sub_total, descripcion, id_estadia, id_servicio, id_empleado)
 VALUES
-(1, '2026-05-10', 2, 'Consumo de hospedaje simple', 1, 1, 1),
-(2, '2026-05-11', 1, 'Consumo de hospedaje doble', 2, 2, 2),
-(3, '2026-05-12', 3, 'Consumo de minibar', 3, 3, 1),
-(4, '2026-05-13', 1, 'Acceso al spa', 4, 4, 3),
-(5, '2026-05-14', 2, 'Almuerzo ejecutivo hotelero', 5, 5, 2);
+(1, '2026-05-10', 2, 30.00, 'Consumo de hospedaje simple', 1, 1, 1),
+(2, '2026-05-11', 1, 30.00, 'Consumo de hospedaje doble', 2, 2, 2),
+(3, '2026-05-12', 3, 24.00, 'Consumo de minibar', 3, 3, 1),
+(4, '2026-05-13', 1, 20.00, 'Acceso al spa', 4, 4, 3),
+(5, '2026-05-14', 2, 30.00, 'Almuerzo ejecutivo hotelero', 5, 5, 2);
 
+
+-- =====================================================
+-- 4. ACTUALIZAR SECUENCIAS
+-- =====================================================
 
 SELECT setval('rol_empleado_id_rol_seq', (SELECT MAX(id_rol) FROM rol_empleado));
 SELECT setval('turno_id_turno_seq', (SELECT MAX(id_turno) FROM turno));
