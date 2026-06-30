@@ -67,7 +67,7 @@ app.get("/reportes/consumos", async (req, res) => {
                 s.nombre_servicio,
                 COUNT(c.id_consumo_srvc) AS cantidad_consumos,
                 SUM(c.cantidad) AS total_cantidad,
-                SUM(c.sub_total) AS total_recaudado
+                SUM(c.cantidad * s.precio_unitario ) AS total_recaudado
             FROM consumo_srvicio c
             INNER JOIN servicio s ON c.id_servicio = s.id_servicio
             INNER JOIN empleado e ON c.id_empleado = e.id_empleado
@@ -99,7 +99,7 @@ app.get("/reportes/consumos/exportar", async (req, res) => {
                 s.nombre_servicio,
                 COUNT(c.id_consumo_srvc) AS cantidad_consumos,
                 SUM(c.cantidad) AS total_cantidad,
-                SUM(c.sub_total) AS total_recaudado
+                SUM(c.cantidad * s.precio_unitario ) AS total_recaudado
             FROM consumo_srvicio c
             INNER JOIN servicio s ON c.id_servicio = s.id_servicio
             INNER JOIN empleado e ON c.id_empleado = e.id_empleado
@@ -129,30 +129,33 @@ app.get("/reportes/consumos/exportar", async (req, res) => {
 
 // TRANSACCION: INSERTAR RESERVA COMPLETA
 // POST : Inserta en 4 tablas: reserva, estadia, pago y detalle_pago
-app.post("/reservas-completas", async (req, res) => {
-    const client = await pool.connect();
+//req.body datoos enviados en json , params datos que vienen en la url con : , query datos que vienen despues de ?
+//res es la respuesta que el servidor va a enviar 
 
+app.post("/reservas-completas", async (req, res) => { // req es la peticion que llega al servidor 
+    const client = await pool.connect(); // await: esperar hasta que haya una conexion lista , grupo de conexiones dispo a la base de datos  ]
+    //osea client es la conexion que se presto para hacer consultas sql
     try {
-        const datos = req.body;
+        const datos = req.body;  // es la variable que almacena los datos que llegaron de la peticion 
 
 
-        await client.query("BEGIN");
-
-        const reserva = await client.query(`
+        await client.query("BEGIN"); // le dice  a postgreSQL que inicie la transaccion  
+        // consulta sql y guarda el resultado en la variable reserva 
+        const reserva = await client.query(` 
             INSERT INTO reserva
             (fch_reserva, estado_reserva, cantidad_personas, id_huesped, id_habitacion, id_empleado)
             VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id_reserva
-        `, [
+            RETURNING id_reserva 
+        `, [ // consulta sql , los $ son espacios reservados . los manda aparte en el arreglo
             datos.fch_reserva,
             datos.estado_reserva,
             datos.cantidad_personas,
             datos.id_huesped,
             datos.id_habitacion,
             datos.id_empleado
-        ]);
+        ]); // inserta una nueva reserva usando los datos que llegaron de req.body y luego guarda el id_reserva que postgresql genero
 
-        const id_reserva_generado = reserva.rows[0].id_reserva;
+        const id_reserva_generado = reserva.rows[0].id_reserva; // devuelve el id reserva generado 
 
         const estadia = await client.query(`
             INSERT INTO estadia
@@ -199,7 +202,7 @@ app.post("/reservas-completas", async (req, res) => {
 
         const id_detalle_generado = detalle.rows[0].id_detalle;
 
-        await client.query("COMMIT");
+        await client.query("COMMIT"); // se completa la transaccion 
 
         res.json({
             mensaje: "Reserva completa registrada correctamente con COMMIT",
@@ -207,9 +210,11 @@ app.post("/reservas-completas", async (req, res) => {
             id_estadia: id_estadia_generado,
             id_pago: id_pago_generado,
             id_detalle: id_detalle_generado
-        });
+        }); // el servidor envia como mensaje en formato json 
 
-    } catch (error) {
+
+
+    } catch (error) { // caso haya un error se ejecuta el rollback
 
         await client.query("ROLLBACK");
 
